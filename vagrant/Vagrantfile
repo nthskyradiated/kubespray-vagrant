@@ -37,8 +37,9 @@ end
 def provision_kubernetes_node(node)
   node.vm.provision "setup-kernel", type: "shell", path: "ubuntu/setup-kernel.sh"
   node.vm.provision "setup-ssh", type: "shell", path: "ubuntu/ssh.sh"
-  node.vm.provision "file", source: "ubuntu/cert_verify.sh", destination: "/home/vagrant/cert_verify.sh"
+  # node.vm.provision "file", source: "ubuntu/cert_verify.sh", destination: "/home/vagrant/cert_verify.sh"
   node.vm.provision "file", source: "ubuntu/net-cleanup.sh", destination: "/home/vagrant/net-cleanup.sh"
+  node.vm.provision "file", source: "ubuntu/kubeadm-init.sh", destination: "/home/vagrant/kubeadm-init.sh"
 end
 
 NUM_CONTROL_NODES = 1
@@ -65,7 +66,8 @@ end
 
 
 Vagrant.configure("2") do |config|
-  config.vm.box = "generic/ubuntu2204"
+  config.vm.box = "sture/ubuntu2404"
+  config.vm.box_version = "2024.12.04.10"
   config.vm.boot_timeout = 900
 
   config.vm.box_check_update = false

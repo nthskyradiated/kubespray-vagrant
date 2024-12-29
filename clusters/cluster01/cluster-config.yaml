@@ -1,0 +1,5 @@
+cluster_name: cluster01
+kube_version: v1.30.4
+kube_network_plugin: cilium
+kube_service_addresses: 10.96.0.0/16
+kube_pods_subnet: 10.244.0.0/16

@@ -10,8 +10,6 @@ echo "INTERFACE: $INTERFACE"
 echo "IP_ADDRESS: $IP_ADDRESS"
 echo "GATEWAY: $GATEWAY"
 
-sudo chmod 644 /etc/netplan/01-netcfg.yaml
-sudo chmod 644 /etc/netplan/00-installer-config.yaml
 
 # Calculate CIDR prefix from the subnet mask
 CIDR=$(echo $NETMASK | awk -F. '{print ($1>0)*8 + ($2>0)*8 + ($3>0)*8 + ($4>0)*8}')
@@ -30,6 +28,9 @@ network:
           via: $GATEWAY
 
 EOF
+
+sudo chmod 644 /etc/netplan/01-netcfg.yaml
+sudo chmod 644 /etc/netplan/50-cloud-init.yaml
 
 # cat <<EOF > /etc/netplan/00-installer-config.yaml
 # network:

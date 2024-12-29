@@ -15,7 +15,7 @@ echo_error() {
 }
 
 # Detect architecture if not set
-echo_step "Detecting system architecture..."
+echo_step "updating package lists..."
 ARCH=${ARCH:-$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')}
 echo_success "Architecture detected: $ARCH"
 

@@ -4,7 +4,7 @@
 resolved_conf_path="/etc/systemd/resolved.conf"
 
 # Path to the specific Netplan configuration file
-netplan_file="/etc/netplan/00-installer-config.yaml"
+netplan_file="/etc/netplan/50-cloud-init.yaml"
 
 # Define the new DNS values
 new_dns="192.168.1.1 4.2.2.2 8.8.8.8"
