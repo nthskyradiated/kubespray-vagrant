@@ -5,7 +5,10 @@ sudo apt update -y && sudo apt upgrade -y
 
 # Disable swap and configure system parameters for Kubernetes
 sudo swapoff -a
-sudo sed -i '/ swap / s/^\\(.*\\)$/#\\1/g' /etc/fstab
+sudo sed -i '/ swap / s/^/#/' /etc/fstab
+sudo rm -f /swapfile
+sudo systemctl daemon-reexec
+
 cat <<EOF | sudo tee /etc/modules-load.d/containerd.conf
 overlay
 br_netfilter
@@ -69,7 +72,51 @@ if [[ "$(hostname)" == "controlplane01" ]]; then
     --set k8sServicePort='6443' \
     --set enable-host-reachable-services='true' \
     --set kubeProxyReplacementHealthzBindAddr='0.0.0.0:10256' \
-    --set bpf.lbExternalClusterIP='true'
+    --set bpf.lbExternalClusterIP='true' \
+    --set prometheus.enabled=true \
+    --set operator.prometheus.enabled=true \
+    --set envoy.prometheus.enabled=true \
+    --set hubble.enabled=true \
+    --set hubble.relay.enabled=true \
+    --set hubble.ui.enabled=true \
+    
+    # Add Aliases to .bashrc
+BASHRC="$HOME/.bashrc"
+echo_step "Adding Kubernetes aliases to $BASHRC..."
+ALIASES=$(cat << 'EOF'
+
+# Kubernetes Aliases
+alias k='kubectl'
+alias kgp='kubectl get pod'
+alias kgs='kubectl get svc'
+alias kgsec='kubectl get secret'
+alias kaf='kubectl apply -f'
+alias kdf='kubectl delete -f'
+alias kga='kubectl get all -A'
+alias kd='kubectl describe'
+alias kgn='kubectl get namespace'
+alias kl='kubectl logs'
+alias kgnet='kubectl get networkpolicies'
+alias kdel='kubectl delete'
+alias kgpv='kubectl get pv'
+alias kgpvc='kubectl get pvc'
+alias kdm='kubectl get daemonset'
+
+EOF
+)
+
+if ! grep -q "alias k='kubectl'" "$BASHRC"; then
+    echo "$ALIASES" >> "$BASHRC"
+    echo "Aliases added to $BASHRC."
+else
+    echo "Aliases already exist in $BASHRC. Skipping addition."
+fi
+
+# Reload .bashrc to apply changes
+echo_step "Reloading $BASHRC..."
+source "$BASHRC"
+echo_success "Script execution completed!"
+
 else
     echo "This is not the control plane node. Script execution ends here."
     exit 0
