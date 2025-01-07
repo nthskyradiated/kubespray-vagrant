@@ -44,6 +44,18 @@ curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key | sudo gpg --
 echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.32/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
 sudo apt update -y
 
+KUBESEAL_VERSION=$(curl -s https://api.github.com/repos/bitnami-labs/sealed-secrets/tags | jq -r '.[0].name' | cut -c 2-)
+
+# Check if the version was fetched successfully
+if [ -z "$KUBESEAL_VERSION" ]; then
+    echo "Failed to fetch the latest KUBESEAL_VERSION"
+    exit 1
+fi
+
+curl -OL "https://github.com/bitnami-labs/sealed-secrets/releases/download/v${KUBESEAL_VERSION}/kubeseal-${KUBESEAL_VERSION}-linux-amd64.tar.gz"
+tar -xvzf kubeseal-${KUBESEAL_VERSION}-linux-amd64.tar.gz kubeseal
+sudo install -m 755 kubeseal /usr/local/bin/kubeseal
+
 DEBIAN_FRONTEND=noninteractive sudo apt-get install -y kubelet kubeadm kubectl
 sudo apt-mark hold kubelet kubeadm kubectl
 sudo systemctl enable --now kubelet
@@ -62,23 +74,7 @@ if [[ "$(hostname)" == "controlplane01" ]]; then
     # Install Ciliium CNI
     helm repo add cilium https://helm.cilium.io/
     helm repo update
-    helm install cilium cilium/cilium --version 1.17.0-rc.0 --namespace kube-system \
-    --set ipam.operator.clusterPoolIPv4PodCIDRList=["10.244.0.0/16"] \
-    --set ipam.mode='kubernetes' \
-    --set enable-endpoint-routes="true" \
-    --set k8s-service-cidr='10.96.0.0/16' \
-    --set kubeProxyReplacement='true' \
-    --set k8sServiceHost='192.168.1.211' \
-    --set k8sServicePort='6443' \
-    --set enable-host-reachable-services='true' \
-    --set kubeProxyReplacementHealthzBindAddr='0.0.0.0:10256' \
-    --set bpf.lbExternalClusterIP='true' \
-    --set prometheus.enabled=true \
-    --set operator.prometheus.enabled=true \
-    --set envoy.prometheus.enabled=true \
-    --set hubble.enabled=true \
-    --set hubble.relay.enabled=true \
-    --set hubble.ui.enabled=true \
+    helm install cilium cilium/cilium --version 1.17.0-rc.0 --namespace kube-system -f cilium-values.yaml
     
     # Add Aliases to .bashrc
 BASHRC="$HOME/.bashrc"
